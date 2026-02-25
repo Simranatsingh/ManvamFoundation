@@ -20,22 +20,15 @@ export default function Campaigns({ onDonateClick }: CampaignsProps) {
           {campaignsData.map((campaign) => (
             <div
               key={campaign.id}
-              className="bg-card rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition border border-border"
+              className="bg-card rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition border border-border"
             >
-              {/* Image Placeholder */}
-              <div className="w-full h-48 bg-gradient-to-br from-amber-200 to-yellow-300 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-4xl mb-2">🏥</div>
-                  <p className="text-sm text-foreground/60 font-medium">{campaign.title}</p>
-                </div>
-              </div>
+              <div className="w-full h-52 bg-gradient-to-br from-amber-200 to-yellow-300"></div>
 
-              {/* Content */}
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-foreground mb-2">{campaign.title}</h3>
-                <p className="text-foreground/70 mb-4 text-sm line-clamp-2">{campaign.description}</p>
+              <div className="p-6 flex flex-col gap-3">
+                <h3 className="text-xl font-bold text-foreground">{campaign.title}</h3>
+                <p className="text-foreground/70 text-sm leading-relaxed">{campaign.description}</p>
 
-                <div className="inline-block bg-accent/20 text-accent px-3 py-1 rounded-full text-xs font-medium">
+                <div className="inline-block w-fit bg-accent/20 text-accent px-3 py-1 rounded-full text-xs font-medium mt-2">
                   ● Ongoing Initiative
                 </div>
               </div>
