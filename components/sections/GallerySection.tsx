@@ -48,9 +48,9 @@ export default function GallerySection({ onDonateClick }: GallerySectionProps) {
 
         <div className="text-center">
           <p className="text-foreground/60 text-sm mb-6">
-            To add more photos: Edit the{" "}
+            {" "}
             <code className="bg-muted px-2 py-1 rounded text-xs font-mono">
-              data/gallery.ts
+              
             </code>{" "}
             file and add new gallery items.
           </p>
