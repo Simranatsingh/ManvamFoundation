@@ -1,10 +1,21 @@
-
-import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/mongodb'
-import Donation from '@/models/Donation'
+import { NextRequest, NextResponse } from "next/server"
+import { connectDB } from "@/lib/mongodb"
+import Donation from "@/models/Donation"
 
 export async function GET(request: NextRequest) {
   try {
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json({
+        success: true,
+        data: [],
+        statistics: {
+          totalDonations: 0,
+          totalAmount: 0,
+          averageDonation: 0,
+        },
+      })
+    }
+
     await connectDB()
 
     const donations = await Donation.find({}).sort({ createdAt: -1 })
@@ -24,9 +35,9 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error fetching donations:', error)
+    console.error("Error fetching donations:", error)
     return NextResponse.json(
-      { error: 'Failed to fetch donations' },
+      { error: "Failed to fetch donations" },
       { status: 500 }
     )
   }
