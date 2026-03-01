@@ -19,6 +19,24 @@ const documentsData = [
     uploadDate: "2026-02-25",
     url: "/documents/panc.pdf",
   },
+  {
+    id: 3,
+    title: "12A Registration Certificate",
+    type: "pdf",
+    description:
+      "Income Tax Department registration under Section 12A(1) granting tax exemption status to the foundation.",
+    uploadDate: "2026-02-25",
+    url: "/documents/12A(1).pdf",
+  },
+  {
+    id: 4,
+    title: "80G Certification",
+    type: "pdf",
+    description:
+      "Certification under Section 80G allowing donors to claim tax deductions on contributions made to the foundation.",
+    uploadDate: "2026-02-25",
+    url: "/documents/80G(1).pdf",
+  },
 ]
 
 export default function DocumentsPage() {
@@ -32,7 +50,7 @@ export default function DocumentsPage() {
             Documents & Resources
           </h1>
           <p className="text-lg text-foreground/70 max-w-2xl mx-auto">
-            Access official documents and certificates of Manvam Foundation.
+            Access official documents and certifications of Manvam Foundation.
           </p>
         </div>
       </section>
@@ -64,6 +82,7 @@ export default function DocumentsPage() {
                 <h3 className="text-xl font-bold text-foreground mb-2">
                   {doc.title}
                 </h3>
+
                 <p className="text-foreground/70 text-sm mb-6">
                   {doc.description}
                 </p>

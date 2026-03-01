@@ -1,5 +1,4 @@
 
-
 import { NextRequest, NextResponse } from 'next/server'
 
 interface CreateOrderRequest {
@@ -12,13 +11,9 @@ interface CreateOrderRequest {
 
 export async function POST(request: NextRequest) {
   try {
-
-    const { amount, donorName, donorEmail, donorPhone, notes } =
+     const { amount, donorName, donorEmail, donorPhone, notes } =
       (await request.json()) as CreateOrderRequest
 
-    // ====================================================================
-    // VALIDATION
-    // ====================================================================
     if (!amount || amount < 10) {
       return NextResponse.json(
         { error: 'Amount must be at least ₹10' },
@@ -33,14 +28,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-  
-    return NextResponse.json({
+  return NextResponse.json({
       success: false,
       message: 'Razorpay integration required. See comments in this file.',
       orderId: null,
     })
 
-  
+
   } catch (error) {
     console.error('Error creating order:', error)
     return NextResponse.json(

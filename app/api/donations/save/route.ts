@@ -1,10 +1,3 @@
-// ============================================================================
-// API ROUTE: Save Donation Record
-// PURPOSE: Store donor info and payment details in MongoDB after successful payment
-// METHOD: POST
-// ENDPOINT: /api/donations/save
-// DATABASE: MongoDB (Donation model)
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
@@ -25,14 +18,8 @@ interface SaveDonationRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    // ====================================================================
-    // CONNECT TO MONGODB
-    // ====================================================================
-    await connectDB()
+   await connectDB()
 
-    // ====================================================================
-    // RECEIVE PAYMENT DATA FROM FRONTEND
-    // ====================================================================
     const {
       donorName,
       donorEmail,
@@ -46,18 +33,14 @@ export async function POST(request: NextRequest) {
       notes,
     } = (await request.json()) as SaveDonationRequest
 
-    // ====================================================================
-    // VALIDATION - Check all required fields
-    // ====================================================================
-    if (!donorName || !donorEmail || !donorPhone || !amount) {
+   if (!donorName || !donorEmail || !donorPhone || !amount) {
       return NextResponse.json(
         { error: 'Missing required fields: name, email, phone, or amount' },
         { status: 400 }
       )
     }
 
-  
-    const donation = new Donation({
+   const donation = new Donation({
       donorName,
       donorEmail,
       donorPhone,
@@ -73,10 +56,7 @@ export async function POST(request: NextRequest) {
 
     await donation.save()
 
-    // ====================================================================
-    // RETURN SUCCESS RESPONSE
-    // ====================================================================
-    return NextResponse.json({
+   return NextResponse.json({
       success: true,
       message: 'Donation saved successfully',
       donationId: donation._id,

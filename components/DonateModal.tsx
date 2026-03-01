@@ -1,16 +1,9 @@
-// ============================================================================
-// COMPONENT: DonateModal
-// PURPOSE: Popup modal for donation with 2-step process (form → payment)
-// STEP 1: Collect donor name and email
-// STEP 2: Display payment method options
-// USAGE: Triggered by "Donate Now" button in Header and Hero sections
-// BACKEND UPDATE GUIDE: See SETUP_GUIDE.md for payment gateway integration
-// ============================================================================
 
 "use client"
 
 import { useState } from "react"
 import { X } from "lucide-react"
+import PaymentDetailsPage from "./PaymentDetailsPage"
 
 interface DonateModalProps {
   isOpen: boolean
@@ -18,33 +11,33 @@ interface DonateModalProps {
 }
 
 export default function DonateModal({ isOpen, onClose }: DonateModalProps) {
-  // ============================================================================
-  // DONATION FORM STATE MANAGEMENT
-  // step: "form" (collect name/email/phone) or "payment" (select payment method)
-  // formData: Donor name, email, and phone number
-  // errors: Validation error messages
-  // loading: Shows loading state during payment processing
-  // ============================================================================
-  const [step, setStep] = useState<"form" | "payment">("form")
+
+  const [step, setStep] = useState<"form" | "payment-details">("form")
   const [formData, setFormData] = useState({ 
     name: "", 
     email: "",
-    phone: "" 
+    phone: "",
+    amount: "" 
   })
   const [errors, setErrors] = useState({ 
     name: "", 
     email: "",
-    phone: "" 
+    phone: "",
+    amount: "" 
   })
   const [loading, setLoading] = useState(false)
+  const [paymentData, setPaymentData] = useState<{
+    name: string
+    email: string
+    phone: string
+    amount: number
+  } | null>(null)
 
   if (!isOpen) return null
 
-  // ============================================================================
-  // FORM VALIDATION - Check all required fields
-  // ============================================================================
+ 
   const validateForm = () => {
-    const newErrors = { name: "", email: "", phone: "" }
+    const newErrors = { name: "", email: "", phone: "", amount: "" }
     let isValid = true
 
     // Check name
@@ -71,81 +64,63 @@ export default function DonateModal({ isOpen, onClose }: DonateModalProps) {
       isValid = false
     }
 
+    // Check amount
+    if (!formData.amount.trim()) {
+      newErrors.amount = "Donation amount is required"
+      isValid = false
+    } else if (isNaN(Number(formData.amount)) || Number(formData.amount) <= 0) {
+      newErrors.amount = "Please enter a valid amount"
+      isValid = false
+    }
+
     setErrors(newErrors)
     return isValid
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (validateForm()) {
-      setStep("payment")
+      setLoading(true)
+      try {
+        // Save donor information to MongoDB
+        const response = await fetch("/api/donations/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            donorName: formData.name,
+            donorEmail: formData.email,
+            donorPhone: formData.phone,
+            amount: Number(formData.amount),
+            paymentMethod: "Manual Transfer",
+            status: "pending",
+          }),
+        })
+
+        const data = await response.json()
+
+        if (response.ok) {
+          // Success - Show payment details page
+          setPaymentData({
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            amount: Number(formData.amount),
+          })
+          setStep("payment-details")
+        } else {
+          alert(data.error || "Failed to process donation")
+        }
+      } catch (error) {
+        console.error("Donation error:", error)
+        alert("Failed to process donation. Please try again.")
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
-  // ============================================================================
-  // HANDLE PAYMENT - Called when user selects payment method
-  // This integrates with Razorpay to process the donation
-  // ============================================================================
-  const handlePaymentMethod = async (method: string) => {
-    setLoading(true)
-    try {
-      // Step 1: Create order from backend
-      const orderResponse = await fetch('/api/donations/create-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: 500, // Default amount - BACKEND UPDATE: Make this dynamic
-          donorName: formData.name,
-          donorEmail: formData.email,
-          donorPhone: formData.phone,
-          notes: `Payment via ${method}`,
-        }),
-      })
-
-      const orderData = await orderResponse.json()
-
-      // BACKEND UPDATE: Razorpay integration
-      // When Razorpay is integrated, use this code:
-      // if (!window.Razorpay) {
-      //   alert('Payment gateway not loaded')
-      //   return
-      // }
-      //
-      // const options = {
-      //   key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      //   order_id: orderData.orderId,
-      //   handler: async (response: any) => {
-      //     // Save donation to database
-      //     await fetch('/api/donations/save', {
-      //       method: 'POST',
-      //       headers: { 'Content-Type': 'application/json' },
-      //       body: JSON.stringify({
-      //         donorName: formData.name,
-      //         donorEmail: formData.email,
-      //         donorPhone: formData.phone,
-      //         amount: 500,
-      //         paymentMethod: method,
-      //         razorpayOrderId: orderData.orderId,
-      //         razorpayPaymentId: response.razorpay_payment_id,
-      //         razorpayReceiptId: orderData.receipt,
-      //         transactionSignature: response.razorpay_signature,
-      //       }),
-      //     })
-      //     alert('Payment successful! Thank you for your donation.')
-      //     onClose()
-      //   },
-      // }
-      //
-      // const razorpay = new window.Razorpay(options)
-      // razorpay.open()
-
-      alert(`Payment method: ${method}\nBackend ready for Razorpay integration`)
-      onClose()
-    } catch (error) {
-      console.error('Payment error:', error)
-      alert('Payment failed. Please try again.')
-    } finally {
-      setLoading(false)
-    }
+  const handleBackFromPayment = () => {
+    setPaymentData(null)
+    setStep("form")
   }
 
   return (
@@ -186,7 +161,7 @@ export default function DonateModal({ isOpen, onClose }: DonateModalProps) {
                 {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
               </div>
 
-              {/* Phone Number Input - BACKEND UPDATE: Required for donation tracking */}
+              {/* Phone Number Input */}
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Phone Number</label>
                 <input
@@ -200,68 +175,35 @@ export default function DonateModal({ isOpen, onClose }: DonateModalProps) {
                 {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
               </div>
 
+              {/* Donation Amount Input */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Donation Amount (₹)</label>
+                <input
+                  type="number"
+                  placeholder="Enter amount in rupees"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  min="1"
+                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-card text-foreground"
+                />
+                {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount}</p>}
+              </div>
+
               <button
                 onClick={handleNext}
                 disabled={loading}
                 className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground py-2 rounded-lg font-semibold transition mt-6"
               >
-                Continue to Payment
+                {loading ? "Processing..." : "Continue to Payment"}
               </button>
             </div>
           </>
-        ) : (
-          <>
-            <h2 className="text-2xl font-bold text-foreground mb-2">Choose Payment Method</h2>
-            <p className="text-foreground/70 text-sm mb-6">Donating as {formData.name}</p>
-
-            <div className="space-y-3">
-              {/* UPI Payment */}
-              <button
-                onClick={() => handlePaymentMethod("UPI")}
-                disabled={loading}
-                className="w-full border-2 border-primary text-primary hover:bg-primary/10 disabled:opacity-50 py-3 rounded-lg font-semibold transition"
-              >
-                {loading ? "Processing..." : "UPI Payment"}
-              </button>
-
-              {/* Credit/Debit Card */}
-              <button
-                onClick={() => handlePaymentMethod("Credit Card")}
-                disabled={loading}
-                className="w-full border-2 border-primary text-primary hover:bg-primary/10 disabled:opacity-50 py-3 rounded-lg font-semibold transition"
-              >
-                {loading ? "Processing..." : "Credit / Debit Card"}
-              </button>
-
-              {/* Net Banking */}
-              <button
-                onClick={() => handlePaymentMethod("Net Banking")}
-                disabled={loading}
-                className="w-full border-2 border-primary text-primary hover:bg-primary/10 disabled:opacity-50 py-3 rounded-lg font-semibold transition"
-              >
-                {loading ? "Processing..." : "Net Banking"}
-              </button>
-
-              {/* Digital Wallet */}
-              <button
-                onClick={() => handlePaymentMethod("Wallet")}
-                disabled={loading}
-                className="w-full border-2 border-primary text-primary hover:bg-primary/10 disabled:opacity-50 py-3 rounded-lg font-semibold transition"
-              >
-                {loading ? "Processing..." : "Digital Wallet"}
-              </button>
-
-              {/* Back Button */}
-              <button
-                onClick={() => setStep("form")}
-                disabled={loading}
-                className="w-full mt-4 text-foreground/70 disabled:opacity-50 py-2 rounded-lg font-semibold hover:text-foreground transition"
-              >
-                Back
-              </button>
-            </div>
-          </>
-        )}
+        ) : step === "payment-details" && paymentData ? (
+          <PaymentDetailsPage
+            donorData={paymentData}
+            onBack={handleBackFromPayment}
+          />
+        ) : null}
       </div>
     </div>
   )

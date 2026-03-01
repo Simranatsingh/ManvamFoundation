@@ -1,8 +1,15 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { galleryData } from "@/data/gallery"
 
 export default function GallerySection() {
+  const router = useRouter()
+
+  const onDonateClick = () => {
+    router.push("/donate")
+  }
+
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-background">
       <div className="max-w-7xl mx-auto">
@@ -11,7 +18,8 @@ export default function GallerySection() {
             Gallery
           </h2>
           <p className="text-lg text-foreground/70 max-w-2xl mx-auto leading-relaxed">
-            Witness the impact of our work across villages and communities. These moments capture our mission in action.
+            Witness the impact of our work across villages and communities.
+            These moments capture our mission in action.
           </p>
         </div>
 
@@ -41,14 +49,7 @@ export default function GallerySection() {
           ))}
         </div>
 
-        <div className="text-center">
-          <p className="text-foreground/60 text-sm mb-6">
-            {" "}
-            <code className="bg-muted px-2 py-1 rounded text-xs font-mono">
-              
-            </code>{" "}
-            file and add new gallery items.
-          </p>
+        <div className="text-center mt-12">
           <button
             onClick={onDonateClick}
             className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-lg font-semibold transition"
